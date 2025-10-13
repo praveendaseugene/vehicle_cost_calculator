@@ -1,0 +1,771 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modern Vehicle Price Calculator</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #6C63FF;      /* Soft purple */
+            --secondary: #4A90E2;    /* Sky blue */
+            --accent: #FF6584;       /* Coral pink */
+            --light: #F0F4F8;        /* Light blue-gray */
+            --dark: #2D3748;         /* Dark blue-gray */
+            --success: #48BB78;      /* Fresh green */
+            --card-bg: #FFFFFF;
+            --shadow: 0 10px 20px rgba(0,0,0,0.05);
+            --radius: 12px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #d9afd9 0%, #97d9e1 100%);
+            color: var(--dark);
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 900px;
+            background: var(--card-bg);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            overflow: hidden;
+        }
+
+        header {
+            background: linear-gradient(to right, var(--primary), var(--secondary));
+            color: white;
+            padding: 20px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .logo i {
+            font-size: 24px;
+        }
+
+        .logo h1 {
+            font-size: 24px;
+            font-weight: 700;
+        }
+
+        .settings-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .settings-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: rotate(30deg);
+        }
+
+        .calculator-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0;
+        }
+
+        .input-section {
+            padding: 30px;
+            background: var(--light);
+        }
+
+        .result-section {
+            padding: 30px;
+            background: white;
+            border-left: 1px solid #eee;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: var(--secondary);
+        }
+
+        select, input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+
+        select:focus, input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(108, 99, 255, 0.2);
+        }
+
+        .calculate-btn {
+            background: linear-gradient(to right, var(--primary), var(--secondary));
+            color: white;
+            border: none;
+            padding: 14px 20px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            transition: all 0.3s;
+            margin-top: 10px;
+        }
+
+        .calculate-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(108, 99, 255, 0.4);
+        }
+
+        .result {
+            display: none;
+        }
+
+        .result h2 {
+            color: var(--secondary);
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #eee;
+        }
+
+        .result-details {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .detail-item {
+            padding: 12px;
+            background: var(--light);
+            border-radius: 8px;
+        }
+
+        .detail-item strong {
+            color: var(--secondary);
+        }
+
+        .total-cost {
+            font-size: 28px;
+            font-weight: bold;
+            color: var(--accent);
+            text-align: center;
+            padding: 20px;
+            background: var(--light);
+            border-radius: 10px;
+            border: 2px dashed var(--accent);
+            margin-top: 20px;
+        }
+
+        .settings-panel {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 30px;
+            border-radius: var(--radius);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
+            width: 90%;
+            max-width: 700px;
+            max-height: 80vh;
+            overflow-y: auto;
+            z-index: 100;
+        }
+
+        .settings-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #eee;
+        }
+
+        .settings-header h2 {
+            color: var(--secondary);
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #777;
+        }
+
+        .destination-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .tab {
+            padding: 10px 20px;
+            background: var(--light);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .tab.active {
+            background: var(--primary);
+            color: white;
+        }
+
+        .vehicle-settings {
+            margin-top: 20px;
+        }
+
+        .vehicle-row {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 10px;
+            padding: 12px;
+            background: var(--light);
+            border-radius: 8px;
+            align-items: center;
+        }
+
+        .vehicle-row-header {
+            font-weight: bold;
+            background: var(--secondary);
+            color: white;
+        }
+
+        .overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 99;
+        }
+
+        .destination-details {
+            margin-top: 15px;
+            padding: 15px;
+            background: #f0f8ff;
+            border-radius: 8px;
+            font-size: 14px;
+            color: #555;
+        }
+
+        @media (max-width: 768px) {
+            .calculator-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .result-section {
+                border-left: none;
+                border-top: 1px solid #eee;
+            }
+            
+            .vehicle-row {
+                grid-template-columns: 1fr;
+                gap: 5px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="logo">
+                <i class="fas fa-car"></i>
+                <h1>Vehicle Price Calculator</h1>
+            </div>
+            <button class="settings-btn" id="settingsBtn">
+                <i class="fas fa-cog"></i>
+            </button>
+        </header>
+        
+        <div class="calculator-container">
+            <div class="input-section">
+                <div class="form-group">
+                    <label for="destination">Destination</label>
+                    <select id="destination">
+                        <option value="Kerala">Kerala</option>
+                        <option value="South India">South India</option>
+                        <option value="Goa">Goa</option>
+                        <option value="Gujarat">Gujarat</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="days">Number of Days</label>
+                    <input type="number" id="days" placeholder="Enter number of days" value="1" min="1">
+                </div>
+                
+                <div class="form-group">
+                    <label for="kms">Total Kilometers</label>
+                    <input type="number" id="kms" placeholder="Enter total kilometers">
+                </div>
+                
+                <div class="form-group">
+                    <label for="vehicle">Vehicle Type</label>
+                    <select id="vehicle">
+                        <option value="Sedan">Sedan</option>
+                        <option value="Ertiga">Ertiga</option>
+                        <option value="Innova">Innova</option>
+                        <option value="Crysta">Innova Crysta</option>
+                        <option value="10 seater TT">10 seater TT</option>
+                        <option value="12 Seater TT">12 Seater TT</option>
+                        <option value="17 Seater TT">17 Seater TT</option>
+                        <option value="21 Seater TT">21 Seater TT</option>
+                        <option value="26 Seater TT">26 Seater TT</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="additionalCost">Additional Cost (Optional)</label>
+                    <input type="number" id="additionalCost" placeholder="Enter additional cost" value="0">
+                </div>
+                
+                <button class="calculate-btn" id="calculateBtn">
+                    <i class="fas fa-calculator"></i> Calculate Price
+                </button>
+            </div>
+            
+            <div class="result-section">
+                <div class="result" id="result">
+                    <h2><i class="fas fa-receipt"></i> Calculation Result</h2>
+                    <div class="result-details">
+                        <div class="detail-item">
+                            <strong>Destination:</strong> <span id="resultDestination"></span>
+                        </div>
+                        <div class="detail-item">
+                            <strong>Days:</strong> <span id="resultDays"></span>
+                        </div>
+                        <div class="detail-item">
+                            <strong>Total Kms:</strong> <span id="resultKms"></span>
+                        </div>
+                        <div class="detail-item">
+                            <strong>Vehicle:</strong> <span id="resultVehicle"></span>
+                        </div>
+                        <div class="detail-item">
+                            <strong>Base Cost:</strong> ₹<span id="resultBaseCost"></span>
+                        </div>
+                        <div class="detail-item">
+                            <strong>Extra Kms:</strong> <span id="resultExtraKms"></span>
+                        </div>
+                        <div class="detail-item">
+                            <strong>Extra Kms Cost:</strong> ₹<span id="resultExtraCost"></span>
+                        </div>
+                        <div class="detail-item">
+                            <strong>Additional Cost:</strong> ₹<span id="resultAdditionalCost"></span>
+                        </div>
+                    </div>
+                    <div class="total-cost">
+                        Total Vehicle Cost: ₹<span id="resultTotalCost"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="overlay" id="overlay"></div>
+    
+    <div class="settings-panel" id="settingsPanel">
+        <div class="settings-header">
+            <h2><i class="fas fa-sliders-h"></i> Vehicle Settings</h2>
+            <button class="close-btn" id="closeSettingsBtn">×</button>
+        </div>
+        
+        <div class="destination-tabs">
+            <div class="tab active" data-destination="Kerala">Kerala</div>
+            <div class="tab" data-destination="South India">South India</div>
+            <div class="tab" data-destination="Goa">Goa</div>
+            <div class="tab" data-destination="Gujarat">Gujarat</div>
+        </div>
+        
+        <div id="destinationDetails" class="destination-details">
+            Kerala: Per day kms limit - 100 kms
+        </div>
+        
+        <div class="vehicle-settings">
+            <div id="vehicleSettingsContainer">
+                <!-- Vehicle settings will be populated here -->
+            </div>
+        </div>
+        
+        <button class="calculate-btn" id="saveSettingsBtn" style="margin-top: 20px;">
+            <i class="fas fa-save"></i> Save Settings
+        </button>
+    </div>
+
+    <script>
+        // Default vehicle rates for different destinations
+        let destinationRates = {
+            "Kerala": {
+                dailyLimit: 100,
+                vehicles: {
+                    "Sedan": { dailyRate: 2000, extraKmRate: 17 },
+                    "Ertiga": { dailyRate: 2300, extraKmRate: 18 },
+                    "Innova": { dailyRate: 2700, extraKmRate: 22 },
+                    "Crysta": { dailyRate: 3000, extraKmRate: 23 },
+                    "10 seater TT": { dailyRate: 3500, extraKmRate: 23 },
+                    "12 Seater TT": { dailyRate: 3700, extraKmRate: 23 },
+                    "17 Seater TT": { dailyRate: 4000, extraKmRate: 24 },
+                    "21 Seater TT": { dailyRate: 5000, extraKmRate: 28 },
+                    "26 Seater TT": { dailyRate: 6000, extraKmRate: 30 }
+                }
+            },
+            "South India": {
+                dailyLimit: 250,
+                vehicles: {
+                    "Sedan": { dailyRate: 0, extraKmRate: 11, bata: 350, tax: 500 },
+                    "Ertiga": { dailyRate: 0, extraKmRate: 15, bata: 400, tax: 1000 },
+                    "Innova": { dailyRate: 0, extraKmRate: 16, bata: 400, tax: 1500 },
+                    "Crysta": { dailyRate: 0, extraKmRate: 18, bata: 400, tax: 3000 },
+                    "10 seater TT": { dailyRate: 0, extraKmRate: 0, bata: 0, tax: 0 },
+                    "12 Seater TT": { dailyRate: 0, extraKmRate: 20, bata: 500, tax: 5000 },
+                    "17 Seater TT": { dailyRate: 0, extraKmRate: 0, bata: 0, tax: 0 },
+                    "21 Seater TT": { dailyRate: 0, extraKmRate: 0, bata: 0, tax: 0 },
+                    "26 Seater TT": { dailyRate: 0, extraKmRate: 0, bata: 0, tax: 0 }
+                }
+            },
+            "Goa": {
+                dailyLimit: 0,
+                vehicles: {
+                    "Sedan": { 
+                        transfer: 2000, 
+                        northGoaSightseeing: 3000, 
+                        southGoaSightseeing: 4000,
+                        nightCharges: 500
+                    },
+                    "Ertiga": { 
+                        transfer: 2500, 
+                        northGoaSightseeing: 4000, 
+                        southGoaSightseeing: 4500,
+                        nightCharges: 500
+                    },
+                    "Innova": { 
+                        transfer: 2500, 
+                        northGoaSightseeing: 4000, 
+                        southGoaSightseeing: 4500,
+                        nightCharges: 500
+                    },
+                    "Crysta": { 
+                        transfer: 0, 
+                        northGoaSightseeing: 0, 
+                        southGoaSightseeing: 0,
+                        nightCharges: 0
+                    },
+                    "10 seater TT": { 
+                        transfer: 0, 
+                        northGoaSightseeing: 0, 
+                        southGoaSightseeing: 0,
+                        nightCharges: 0
+                    },
+                    "12 Seater TT": { 
+                        transfer: 0, 
+                        northGoaSightseeing: 0, 
+                        southGoaSightseeing: 0,
+                        nightCharges: 0
+                    },
+                    "17 Seater TT": { 
+                        transfer: 0, 
+                        northGoaSightseeing: 0, 
+                        southGoaSightseeing: 0,
+                        nightCharges: 0
+                    },
+                    "21 Seater TT": { 
+                        transfer: 0, 
+                        northGoaSightseeing: 0, 
+                        southGoaSightseeing: 0,
+                        nightCharges: 0
+                    },
+                    "26 Seater TT": { 
+                        transfer: 0, 
+                        northGoaSightseeing: 0, 
+                        southGoaSightseeing: 0,
+                        nightCharges: 0
+                    }
+                }
+            },
+            "Gujarat": {
+                dailyLimit: 0,
+                vehicles: {
+                    "Sedan": { dailyRate: 0, extraKmRate: 0 },
+                    "Ertiga": { dailyRate: 0, extraKmRate: 0 },
+                    "Innova": { dailyRate: 0, extraKmRate: 0 },
+                    "Crysta": { dailyRate: 0, extraKmRate: 0 },
+                    "10 seater TT": { dailyRate: 0, extraKmRate: 0 },
+                    "12 Seater TT": { dailyRate: 0, extraKmRate: 0 },
+                    "17 Seater TT": { dailyRate: 0, extraKmRate: 0 },
+                    "21 Seater TT": { dailyRate: 0, extraKmRate: 0 },
+                    "26 Seater TT": { dailyRate: 0, extraKmRate: 0 }
+                }
+            }
+        };
+
+        // DOM elements
+        const calculateBtn = document.getElementById('calculateBtn');
+        const settingsBtn = document.getElementById('settingsBtn');
+        const closeSettingsBtn = document.getElementById('closeSettingsBtn');
+        const saveSettingsBtn = document.getElementById('saveSettingsBtn');
+        const overlay = document.getElementById('overlay');
+        const settingsPanel = document.getElementById('settingsPanel');
+        const resultDiv = document.getElementById('result');
+        const vehicleSettingsContainer = document.getElementById('vehicleSettingsContainer');
+        const destinationTabs = document.querySelectorAll('.tab');
+        const destinationDetails = document.getElementById('destinationDetails');
+        let currentSettingsDestination = "Kerala";
+
+        // Initialize vehicle settings in the panel
+        function initializeVehicleSettings(destination = "Kerala") {
+            vehicleSettingsContainer.innerHTML = '';
+            currentSettingsDestination = destination;
+            
+            const destinationData = destinationRates[destination];
+            
+            // Update destination details
+            if (destination === "Kerala") {
+                destinationDetails.textContent = "Kerala: Per day kms limit - 100 kms";
+            } else if (destination === "South India") {
+                destinationDetails.textContent = "South India: Different rates for each vehicle with bata and tax";
+            } else if (destination === "Goa") {
+                destinationDetails.textContent = "Goa: Fixed rates for transfers and sightseeing with night charges";
+            } else {
+                destinationDetails.textContent = "Gujarat: Custom rates (editable)";
+            }
+            
+            // Create header row based on destination
+            const headerRow = document.createElement('div');
+            headerRow.className = 'vehicle-row vehicle-row-header';
+            
+            if (destination === "Goa") {
+                headerRow.innerHTML = `
+                    <div>Vehicle Type</div>
+                    <div>Transfer (₹)</div>
+                    <div>North Goa (₹)</div>
+                    <div>South Goa (₹)</div>
+                    <div>Night Charges (₹)</div>
+                `;
+            } else if (destination === "South India") {
+                headerRow.innerHTML = `
+                    <div>Vehicle Type</div>
+                    <div>Extra Km Rate (₹)</div>
+                    <div>Bata (₹)</div>
+                    <div>Tax (₹)</div>
+                `;
+            } else {
+                headerRow.innerHTML = `
+                    <div>Vehicle Type</div>
+                    <div>Daily Rate (₹)</div>
+                    <div>Extra Km Rate (₹)</div>
+                `;
+            }
+            
+            vehicleSettingsContainer.appendChild(headerRow);
+            
+            // Create rows for each vehicle
+            for (const vehicle in destinationData.vehicles) {
+                const row = document.createElement('div');
+                row.className = 'vehicle-row';
+                
+                if (destination === "Goa") {
+                    row.innerHTML = `
+                        <div>${vehicle}</div>
+                        <input type="number" value="${destinationData.vehicles[vehicle].transfer}" placeholder="Transfer" id="transfer-${vehicle.replace(/\s+/g, '-')}">
+                        <input type="number" value="${destinationData.vehicles[vehicle].northGoaSightseeing}" placeholder="North Goa" id="north-${vehicle.replace(/\s+/g, '-')}">
+                        <input type="number" value="${destinationData.vehicles[vehicle].southGoaSightseeing}" placeholder="South Goa" id="south-${vehicle.replace(/\s+/g, '-')}">
+                        <input type="number" value="${destinationData.vehicles[vehicle].nightCharges}" placeholder="Night Charges" id="night-${vehicle.replace(/\s+/g, '-')}">
+                    `;
+                } else if (destination === "South India") {
+                    row.innerHTML = `
+                        <div>${vehicle}</div>
+                        <input type="number" value="${destinationData.vehicles[vehicle].extraKmRate}" placeholder="Extra Km Rate" id="extra-${vehicle.replace(/\s+/g, '-')}">
+                        <input type="number" value="${destinationData.vehicles[vehicle].bata}" placeholder="Bata" id="bata-${vehicle.replace(/\s+/g, '-')}">
+                        <input type="number" value="${destinationData.vehicles[vehicle].tax}" placeholder="Tax" id="tax-${vehicle.replace(/\s+/g, '-')}">
+                    `;
+                } else {
+                    row.innerHTML = `
+                        <div>${vehicle}</div>
+                        <input type="number" value="${destinationData.vehicles[vehicle].dailyRate}" placeholder="Daily Rate" id="daily-${vehicle.replace(/\s+/g, '-')}">
+                        <input type="number" value="${destinationData.vehicles[vehicle].extraKmRate}" placeholder="Extra Km Rate" id="extra-${vehicle.replace(/\s+/g, '-')}">
+                    `;
+                }
+                
+                vehicleSettingsContainer.appendChild(row);
+            }
+        }
+
+        // Calculate vehicle cost
+        function calculateVehicleCost() {
+            const destination = document.getElementById('destination').value;
+            const days = parseInt(document.getElementById('days').value) || 1;
+            const kms = parseInt(document.getElementById('kms').value);
+            const vehicle = document.getElementById('vehicle').value;
+            const additionalCost = parseInt(document.getElementById('additionalCost').value) || 0;
+            
+            if (!kms || kms <= 0) {
+                alert('Please enter a valid number of kilometers');
+                return;
+            }
+            
+            if (!days || days <= 0) {
+                alert('Please enter a valid number of days');
+                return;
+            }
+            
+            const destinationData = destinationRates[destination];
+            const vehicleData = destinationData.vehicles[vehicle];
+            
+            if (!vehicleData) {
+                alert('Invalid vehicle selection');
+                return;
+            }
+            
+            let baseCost = 0;
+            let extraKms = 0;
+            let extraCost = 0;
+            let bata = 0;
+            let tax = 0;
+            
+            if (destination === "Kerala") {
+                baseCost = vehicleData.dailyRate * days;
+                const dailyLimitTotal = destinationData.dailyLimit * days;
+                extraKms = Math.max(0, kms - dailyLimitTotal);
+                extraCost = extraKms * vehicleData.extraKmRate;
+            } else if (destination === "South India") {
+                const dailyLimitTotal = destinationData.dailyLimit * days;
+                extraKms = Math.max(0, kms - dailyLimitTotal);
+                extraCost = extraKms * vehicleData.extraKmRate;
+                bata = (vehicleData.bata || 0) * days;
+                tax = (vehicleData.tax || 0) * days;
+                baseCost = bata + tax;
+            } else if (destination === "Goa") {
+                // For Goa, we'll use a simplified calculation
+                baseCost = vehicleData.transfer * 2; // Assuming round trip
+                extraCost = 0; // No extra km cost in this model
+            } else {
+                // Gujarat - custom calculation
+                baseCost = (vehicleData.dailyRate || 0) * days;
+                const dailyLimitTotal = (destinationData.dailyLimit || 0) * days;
+                extraKms = Math.max(0, kms - dailyLimitTotal);
+                extraCost = extraKms * (vehicleData.extraKmRate || 0);
+            }
+            
+            const totalCost = baseCost + extraCost + additionalCost;
+            
+            // Display results
+            document.getElementById('resultDestination').textContent = destination;
+            document.getElementById('resultDays').textContent = days;
+            document.getElementById('resultKms').textContent = kms;
+            document.getElementById('resultVehicle').textContent = vehicle;
+            document.getElementById('resultBaseCost').textContent = baseCost;
+            document.getElementById('resultExtraKms').textContent = extraKms;
+            document.getElementById('resultExtraCost').textContent = extraCost;
+            document.getElementById('resultAdditionalCost').textContent = additionalCost;
+            document.getElementById('resultTotalCost').textContent = totalCost;
+            
+            resultDiv.style.display = 'block';
+        }
+
+        // Save settings from the settings panel
+        function saveSettings() {
+            const destinationData = destinationRates[currentSettingsDestination];
+            
+            for (const vehicle in destinationData.vehicles) {
+                if (currentSettingsDestination === "Goa") {
+                    const transferInput = document.getElementById(`transfer-${vehicle.replace(/\s+/g, '-')}`);
+                    const northInput = document.getElementById(`north-${vehicle.replace(/\s+/g, '-')}`);
+                    const southInput = document.getElementById(`south-${vehicle.replace(/\s+/g, '-')}`);
+                    const nightInput = document.getElementById(`night-${vehicle.replace(/\s+/g, '-')}`);
+                    
+                    if (transferInput) destinationData.vehicles[vehicle].transfer = parseInt(transferInput.value) || 0;
+                    if (northInput) destinationData.vehicles[vehicle].northGoaSightseeing = parseInt(northInput.value) || 0;
+                    if (southInput) destinationData.vehicles[vehicle].southGoaSightseeing = parseInt(southInput.value) || 0;
+                    if (nightInput) destinationData.vehicles[vehicle].nightCharges = parseInt(nightInput.value) || 0;
+                } else if (currentSettingsDestination === "South India") {
+                    const extraInput = document.getElementById(`extra-${vehicle.replace(/\s+/g, '-')}`);
+                    const bataInput = document.getElementById(`bata-${vehicle.replace(/\s+/g, '-')}`);
+                    const taxInput = document.getElementById(`tax-${vehicle.replace(/\s+/g, '-')}`);
+                    
+                    if (extraInput) destinationData.vehicles[vehicle].extraKmRate = parseInt(extraInput.value) || 0;
+                    if (bataInput) destinationData.vehicles[vehicle].bata = parseInt(bataInput.value) || 0;
+                    if (taxInput) destinationData.vehicles[vehicle].tax = parseInt(taxInput.value) || 0;
+                } else {
+                    const dailyInput = document.getElementById(`daily-${vehicle.replace(/\s+/g, '-')}`);
+                    const extraInput = document.getElementById(`extra-${vehicle.replace(/\s+/g, '-')}`);
+                    
+                    if (dailyInput) destinationData.vehicles[vehicle].dailyRate = parseInt(dailyInput.value) || 0;
+                    if (extraInput) destinationData.vehicles[vehicle].extraKmRate = parseInt(extraInput.value) || 0;
+                }
+            }
+            
+            closeSettingsPanel();
+        }
+
+        // Open settings panel
+        function openSettingsPanel() {
+            settingsPanel.style.display = 'block';
+            overlay.style.display = 'block';
+        }
+
+        // Close settings panel
+        function closeSettingsPanel() {
+            settingsPanel.style.display = 'none';
+            overlay.style.display = 'none';
+        }
+
+        // Event listeners
+        calculateBtn.addEventListener('click', calculateVehicleCost);
+        settingsBtn.addEventListener('click', openSettingsPanel);
+        closeSettingsBtn.addEventListener('click', closeSettingsPanel);
+        saveSettingsBtn.addEventListener('click', saveSettings);
+        overlay.addEventListener('click', closeSettingsPanel);
+
+        // Tab switching
+        destinationTabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                destinationTabs.forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+                initializeVehicleSettings(tab.dataset.destination);
+            });
+        });
+
+        // Initialize the app
+        initializeVehicleSettings();
+    </script>
+</body>
+</html>
