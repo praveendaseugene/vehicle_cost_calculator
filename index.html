@@ -200,7 +200,7 @@
             border-radius: var(--radius);
             box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
             width: 90%;
-            max-width: 700px;
+            max-width: 800px;
             max-height: 80vh;
             overflow-y: auto;
             z-index: 100;
@@ -253,7 +253,7 @@
 
         .vehicle-row {
             display: grid;
-            grid-template-columns: 2fr 1fr 1fr 1fr;
+            grid-template-columns: 2fr 1fr 1fr 1fr auto;
             gap: 10px;
             margin-bottom: 10px;
             padding: 12px;
@@ -266,6 +266,59 @@
             font-weight: bold;
             background: var(--secondary);
             color: white;
+        }
+
+        .remove-vehicle {
+            background: var(--accent);
+            color: white;
+            border: none;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .remove-vehicle:hover {
+            background: #e0557e;
+            transform: scale(1.1);
+        }
+
+        .add-vehicle-section {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border: 2px dashed #ddd;
+        }
+
+        .add-vehicle-form {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr 1fr auto;
+            gap: 10px;
+            align-items: end;
+        }
+
+        .add-vehicle-btn {
+            background: var(--success);
+            color: white;
+            border: none;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .add-vehicle-btn:hover {
+            background: #3da766;
+            transform: scale(1.1);
         }
 
         .overlay {
@@ -298,9 +351,13 @@
                 border-top: 1px solid #eee;
             }
             
-            .vehicle-row {
+            .vehicle-row, .add-vehicle-form {
                 grid-template-columns: 1fr;
                 gap: 5px;
+            }
+            
+            .vehicle-row-header {
+                display: none;
             }
         }
     </style>
@@ -342,15 +399,7 @@
                 <div class="form-group">
                     <label for="vehicle">Vehicle Type</label>
                     <select id="vehicle">
-                        <option value="Sedan">Sedan</option>
-                        <option value="Ertiga">Ertiga</option>
-                        <option value="Innova">Innova</option>
-                        <option value="Crysta">Innova Crysta</option>
-                        <option value="10 seater TT">10 seater TT</option>
-                        <option value="12 Seater TT">12 Seater TT</option>
-                        <option value="17 Seater TT">17 Seater TT</option>
-                        <option value="21 Seater TT">21 Seater TT</option>
-                        <option value="26 Seater TT">26 Seater TT</option>
+                        <!-- Vehicle options will be populated dynamically -->
                     </select>
                 </div>
                 
@@ -423,6 +472,13 @@
         <div class="vehicle-settings">
             <div id="vehicleSettingsContainer">
                 <!-- Vehicle settings will be populated here -->
+            </div>
+            
+            <div class="add-vehicle-section">
+                <h3 style="margin-bottom: 15px; color: var(--secondary);">Add New Vehicle</h3>
+                <div class="add-vehicle-form" id="addVehicleForm">
+                    <!-- Add vehicle form will be populated here -->
+                </div>
             </div>
         </div>
         
@@ -546,13 +602,29 @@
         const settingsPanel = document.getElementById('settingsPanel');
         const resultDiv = document.getElementById('result');
         const vehicleSettingsContainer = document.getElementById('vehicleSettingsContainer');
+        const addVehicleForm = document.getElementById('addVehicleForm');
         const destinationTabs = document.querySelectorAll('.tab');
         const destinationDetails = document.getElementById('destinationDetails');
+        const vehicleSelect = document.getElementById('vehicle');
         let currentSettingsDestination = "Kerala";
+
+        // Initialize the vehicle dropdown
+        function initializeVehicleDropdown() {
+            vehicleSelect.innerHTML = '';
+            const vehicles = Object.keys(destinationRates["Kerala"].vehicles);
+            
+            vehicles.forEach(vehicle => {
+                const option = document.createElement('option');
+                option.value = vehicle;
+                option.textContent = vehicle;
+                vehicleSelect.appendChild(option);
+            });
+        }
 
         // Initialize vehicle settings in the panel
         function initializeVehicleSettings(destination = "Kerala") {
             vehicleSettingsContainer.innerHTML = '';
+            addVehicleForm.innerHTML = '';
             currentSettingsDestination = destination;
             
             const destinationData = destinationRates[destination];
@@ -579,6 +651,7 @@
                     <div>North Goa (₹)</div>
                     <div>South Goa (₹)</div>
                     <div>Night Charges (₹)</div>
+                    <div>Action</div>
                 `;
             } else if (destination === "South India") {
                 headerRow.innerHTML = `
@@ -586,12 +659,14 @@
                     <div>Extra Km Rate (₹)</div>
                     <div>Bata (₹)</div>
                     <div>Tax (₹)</div>
+                    <div>Action</div>
                 `;
             } else {
                 headerRow.innerHTML = `
                     <div>Vehicle Type</div>
                     <div>Daily Rate (₹)</div>
                     <div>Extra Km Rate (₹)</div>
+                    <div>Action</div>
                 `;
             }
             
@@ -601,6 +676,7 @@
             for (const vehicle in destinationData.vehicles) {
                 const row = document.createElement('div');
                 row.className = 'vehicle-row';
+                row.id = `vehicle-${vehicle.replace(/\s+/g, '-')}`;
                 
                 if (destination === "Goa") {
                     row.innerHTML = `
@@ -609,6 +685,9 @@
                         <input type="number" value="${destinationData.vehicles[vehicle].northGoaSightseeing}" placeholder="North Goa" id="north-${vehicle.replace(/\s+/g, '-')}">
                         <input type="number" value="${destinationData.vehicles[vehicle].southGoaSightseeing}" placeholder="South Goa" id="south-${vehicle.replace(/\s+/g, '-')}">
                         <input type="number" value="${destinationData.vehicles[vehicle].nightCharges}" placeholder="Night Charges" id="night-${vehicle.replace(/\s+/g, '-')}">
+                        <button class="remove-vehicle" data-vehicle="${vehicle}">
+                            <i class="fas fa-trash"></i>
+                        </button>
                     `;
                 } else if (destination === "South India") {
                     row.innerHTML = `
@@ -616,16 +695,141 @@
                         <input type="number" value="${destinationData.vehicles[vehicle].extraKmRate}" placeholder="Extra Km Rate" id="extra-${vehicle.replace(/\s+/g, '-')}">
                         <input type="number" value="${destinationData.vehicles[vehicle].bata}" placeholder="Bata" id="bata-${vehicle.replace(/\s+/g, '-')}">
                         <input type="number" value="${destinationData.vehicles[vehicle].tax}" placeholder="Tax" id="tax-${vehicle.replace(/\s+/g, '-')}">
+                        <button class="remove-vehicle" data-vehicle="${vehicle}">
+                            <i class="fas fa-trash"></i>
+                        </button>
                     `;
                 } else {
                     row.innerHTML = `
                         <div>${vehicle}</div>
                         <input type="number" value="${destinationData.vehicles[vehicle].dailyRate}" placeholder="Daily Rate" id="daily-${vehicle.replace(/\s+/g, '-')}">
                         <input type="number" value="${destinationData.vehicles[vehicle].extraKmRate}" placeholder="Extra Km Rate" id="extra-${vehicle.replace(/\s+/g, '-')}">
+                        <button class="remove-vehicle" data-vehicle="${vehicle}">
+                            <i class="fas fa-trash"></i>
+                        </button>
                     `;
                 }
                 
                 vehicleSettingsContainer.appendChild(row);
+            }
+            
+            // Add event listeners to remove buttons
+            document.querySelectorAll('.remove-vehicle').forEach(button => {
+                button.addEventListener('click', function() {
+                    const vehicleName = this.getAttribute('data-vehicle');
+                    removeVehicle(vehicleName);
+                });
+            });
+            
+            // Create add vehicle form based on destination
+            if (destination === "Goa") {
+                addVehicleForm.innerHTML = `
+                    <input type="text" id="newVehicleName" placeholder="Vehicle Name">
+                    <input type="number" id="newVehicleTransfer" placeholder="Transfer Rate">
+                    <input type="number" id="newVehicleNorth" placeholder="North Goa">
+                    <input type="number" id="newVehicleSouth" placeholder="South Goa">
+                    <input type="number" id="newVehicleNight" placeholder="Night Charges">
+                    <button class="add-vehicle-btn" id="addVehicleBtn">
+                        <i class="fas fa-plus"></i>
+                    </button>
+                `;
+            } else if (destination === "South India") {
+                addVehicleForm.innerHTML = `
+                    <input type="text" id="newVehicleName" placeholder="Vehicle Name">
+                    <input type="number" id="newVehicleExtra" placeholder="Extra Km Rate">
+                    <input type="number" id="newVehicleBata" placeholder="Bata">
+                    <input type="number" id="newVehicleTax" placeholder="Tax">
+                    <button class="add-vehicle-btn" id="addVehicleBtn">
+                        <i class="fas fa-plus"></i>
+                    </button>
+                `;
+            } else {
+                addVehicleForm.innerHTML = `
+                    <input type="text" id="newVehicleName" placeholder="Vehicle Name">
+                    <input type="number" id="newVehicleDaily" placeholder="Daily Rate">
+                    <input type="number" id="newVehicleExtra" placeholder="Extra Km Rate">
+                    <button class="add-vehicle-btn" id="addVehicleBtn">
+                        <i class="fas fa-plus"></i>
+                    </button>
+                `;
+            }
+            
+            // Add event listener to add vehicle button
+            document.getElementById('addVehicleBtn').addEventListener('click', addNewVehicle);
+        }
+
+        // Add a new vehicle
+        function addNewVehicle() {
+            const vehicleName = document.getElementById('newVehicleName').value.trim();
+            
+            if (!vehicleName) {
+                alert('Please enter a vehicle name');
+                return;
+            }
+            
+            if (destinationRates[currentSettingsDestination].vehicles[vehicleName]) {
+                alert('This vehicle already exists');
+                return;
+            }
+            
+            // Create default vehicle data based on destination
+            if (currentSettingsDestination === "Goa") {
+                const transfer = parseInt(document.getElementById('newVehicleTransfer').value) || 0;
+                const north = parseInt(document.getElementById('newVehicleNorth').value) || 0;
+                const south = parseInt(document.getElementById('newVehicleSouth').value) || 0;
+                const night = parseInt(document.getElementById('newVehicleNight').value) || 0;
+                
+                destinationRates[currentSettingsDestination].vehicles[vehicleName] = {
+                    transfer: transfer,
+                    northGoaSightseeing: north,
+                    southGoaSightseeing: south,
+                    nightCharges: night
+                };
+            } else if (currentSettingsDestination === "South India") {
+                const extra = parseInt(document.getElementById('newVehicleExtra').value) || 0;
+                const bata = parseInt(document.getElementById('newVehicleBata').value) || 0;
+                const tax = parseInt(document.getElementById('newVehicleTax').value) || 0;
+                
+                destinationRates[currentSettingsDestination].vehicles[vehicleName] = {
+                    dailyRate: 0,
+                    extraKmRate: extra,
+                    bata: bata,
+                    tax: tax
+                };
+            } else {
+                const daily = parseInt(document.getElementById('newVehicleDaily').value) || 0;
+                const extra = parseInt(document.getElementById('newVehicleExtra').value) || 0;
+                
+                destinationRates[currentSettingsDestination].vehicles[vehicleName] = {
+                    dailyRate: daily,
+                    extraKmRate: extra
+                };
+            }
+            
+            // Reinitialize the settings to show the new vehicle
+            initializeVehicleSettings(currentSettingsDestination);
+            
+            // Clear the form
+            document.getElementById('newVehicleName').value = '';
+            if (document.getElementById('newVehicleDaily')) document.getElementById('newVehicleDaily').value = '';
+            if (document.getElementById('newVehicleExtra')) document.getElementById('newVehicleExtra').value = '';
+            if (document.getElementById('newVehicleBata')) document.getElementById('newVehicleBata').value = '';
+            if (document.getElementById('newVehicleTax')) document.getElementById('newVehicleTax').value = '';
+            if (document.getElementById('newVehicleTransfer')) document.getElementById('newVehicleTransfer').value = '';
+            if (document.getElementById('newVehicleNorth')) document.getElementById('newVehicleNorth').value = '';
+            if (document.getElementById('newVehicleSouth')) document.getElementById('newVehicleSouth').value = '';
+            if (document.getElementById('newVehicleNight')) document.getElementById('newVehicleNight').value = '';
+            
+            // Update the vehicle dropdown
+            initializeVehicleDropdown();
+        }
+
+        // Remove a vehicle
+        function removeVehicle(vehicleName) {
+            if (confirm(`Are you sure you want to remove ${vehicleName}?`)) {
+                delete destinationRates[currentSettingsDestination].vehicles[vehicleName];
+                initializeVehicleSettings(currentSettingsDestination);
+                initializeVehicleDropdown();
             }
         }
 
@@ -733,6 +937,9 @@
                 }
             }
             
+            // Update the vehicle dropdown
+            initializeVehicleDropdown();
+            
             closeSettingsPanel();
         }
 
@@ -765,6 +972,7 @@
         });
 
         // Initialize the app
+        initializeVehicleDropdown();
         initializeVehicleSettings();
     </script>
 </body>
