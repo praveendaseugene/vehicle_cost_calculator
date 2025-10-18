@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Modern Vehicle Price Calculator</title>
+    <title>Vehicle Price Calculator</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root {
@@ -200,7 +200,7 @@
             border-radius: var(--radius);
             box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
             width: 90%;
-            max-width: 800px;
+            max-width: 850px;
             max-height: 80vh;
             overflow-y: auto;
             z-index: 100;
@@ -253,7 +253,6 @@
 
         .vehicle-row {
             display: grid;
-            grid-template-columns: 2fr 1fr 1fr 1fr auto;
             gap: 10px;
             margin-bottom: 10px;
             padding: 12px;
@@ -297,7 +296,6 @@
 
         .add-vehicle-form {
             display: grid;
-            grid-template-columns: 2fr 1fr 1fr 1fr auto;
             gap: 10px;
             align-items: end;
         }
@@ -339,6 +337,23 @@
             border-radius: 8px;
             font-size: 14px;
             color: #555;
+        }
+
+        /* Grid templates for different destinations */
+        .kerala-grid {
+            grid-template-columns: 2fr 1fr 1fr auto;
+        }
+        
+        .south-india-grid {
+            grid-template-columns: 2fr 1fr 1fr 1fr 1fr auto;
+        }
+        
+        .goa-grid {
+            grid-template-columns: 2fr 1fr 1fr 1fr 1fr auto;
+        }
+        
+        .gujarat-grid {
+            grid-template-columns: 2fr 1fr 1fr auto;
         }
 
         @media (max-width: 768px) {
@@ -505,17 +520,17 @@
                 }
             },
             "South India": {
-                dailyLimit: 250,
+                dailyLimit: 300, // Minimum per day kms
                 vehicles: {
-                    "Sedan": { dailyRate: 0, extraKmRate: 11, bata: 350, tax: 500 },
-                    "Ertiga": { dailyRate: 0, extraKmRate: 15, bata: 400, tax: 1000 },
-                    "Innova": { dailyRate: 0, extraKmRate: 16, bata: 400, tax: 1500 },
-                    "Crysta": { dailyRate: 0, extraKmRate: 18, bata: 400, tax: 3000 },
-                    "10 seater TT": { dailyRate: 0, extraKmRate: 0, bata: 0, tax: 0 },
-                    "12 Seater TT": { dailyRate: 0, extraKmRate: 20, bata: 500, tax: 5000 },
-                    "17 Seater TT": { dailyRate: 0, extraKmRate: 0, bata: 0, tax: 0 },
-                    "21 Seater TT": { dailyRate: 0, extraKmRate: 0, bata: 0, tax: 0 },
-                    "26 Seater TT": { dailyRate: 0, extraKmRate: 0, bata: 0, tax: 0 }
+                    "Sedan": { dailyRate: 0, extraKmRate: 11, bata: 350, tax: 500, minPerDayKms: 300 },
+                    "Ertiga": { dailyRate: 0, extraKmRate: 15, bata: 400, tax: 1000, minPerDayKms: 300 },
+                    "Innova": { dailyRate: 0, extraKmRate: 16, bata: 400, tax: 1500, minPerDayKms: 300 },
+                    "Crysta": { dailyRate: 0, extraKmRate: 18, bata: 400, tax: 3000, minPerDayKms: 300 },
+                    "10 seater TT": { dailyRate: 0, extraKmRate: 0, bata: 0, tax: 0, minPerDayKms: 300 },
+                    "12 Seater TT": { dailyRate: 0, extraKmRate: 20, bata: 500, tax: 5000, minPerDayKms: 300 },
+                    "17 Seater TT": { dailyRate: 0, extraKmRate: 0, bata: 0, tax: 0, minPerDayKms: 300 },
+                    "21 Seater TT": { dailyRate: 0, extraKmRate: 0, bata: 0, tax: 0, minPerDayKms: 300 },
+                    "26 Seater TT": { dailyRate: 0, extraKmRate: 0, bata: 0, tax: 0, minPerDayKms: 300 }
                 }
             },
             "Goa": {
@@ -633,7 +648,7 @@
             if (destination === "Kerala") {
                 destinationDetails.textContent = "Kerala: Per day kms limit - 100 kms";
             } else if (destination === "South India") {
-                destinationDetails.textContent = "South India: Different rates for each vehicle with bata and tax";
+                destinationDetails.textContent = "South India: Minimum 300 kms per day, additional kms charged at extra rate";
             } else if (destination === "Goa") {
                 destinationDetails.textContent = "Goa: Fixed rates for transfers and sightseeing with night charges";
             } else {
@@ -645,6 +660,7 @@
             headerRow.className = 'vehicle-row vehicle-row-header';
             
             if (destination === "Goa") {
+                headerRow.classList.add('goa-grid');
                 headerRow.innerHTML = `
                     <div>Vehicle Type</div>
                     <div>Transfer (₹)</div>
@@ -654,14 +670,17 @@
                     <div>Action</div>
                 `;
             } else if (destination === "South India") {
+                headerRow.classList.add('south-india-grid');
                 headerRow.innerHTML = `
                     <div>Vehicle Type</div>
+                    <div>Min Per Day Kms</div>
                     <div>Extra Km Rate (₹)</div>
                     <div>Bata (₹)</div>
                     <div>Tax (₹)</div>
                     <div>Action</div>
                 `;
             } else {
+                headerRow.classList.add('kerala-grid');
                 headerRow.innerHTML = `
                     <div>Vehicle Type</div>
                     <div>Daily Rate (₹)</div>
@@ -679,6 +698,7 @@
                 row.id = `vehicle-${vehicle.replace(/\s+/g, '-')}`;
                 
                 if (destination === "Goa") {
+                    row.classList.add('goa-grid');
                     row.innerHTML = `
                         <div>${vehicle}</div>
                         <input type="number" value="${destinationData.vehicles[vehicle].transfer}" placeholder="Transfer" id="transfer-${vehicle.replace(/\s+/g, '-')}">
@@ -690,8 +710,10 @@
                         </button>
                     `;
                 } else if (destination === "South India") {
+                    row.classList.add('south-india-grid');
                     row.innerHTML = `
                         <div>${vehicle}</div>
+                        <input type="number" value="${destinationData.vehicles[vehicle].minPerDayKms}" placeholder="Min Kms" id="minKms-${vehicle.replace(/\s+/g, '-')}">
                         <input type="number" value="${destinationData.vehicles[vehicle].extraKmRate}" placeholder="Extra Km Rate" id="extra-${vehicle.replace(/\s+/g, '-')}">
                         <input type="number" value="${destinationData.vehicles[vehicle].bata}" placeholder="Bata" id="bata-${vehicle.replace(/\s+/g, '-')}">
                         <input type="number" value="${destinationData.vehicles[vehicle].tax}" placeholder="Tax" id="tax-${vehicle.replace(/\s+/g, '-')}">
@@ -700,6 +722,7 @@
                         </button>
                     `;
                 } else {
+                    row.classList.add('kerala-grid');
                     row.innerHTML = `
                         <div>${vehicle}</div>
                         <input type="number" value="${destinationData.vehicles[vehicle].dailyRate}" placeholder="Daily Rate" id="daily-${vehicle.replace(/\s+/g, '-')}">
@@ -722,8 +745,12 @@
             });
             
             // Create add vehicle form based on destination
+            const formRow = document.createElement('div');
+            formRow.className = 'add-vehicle-form';
+            
             if (destination === "Goa") {
-                addVehicleForm.innerHTML = `
+                formRow.classList.add('goa-grid');
+                formRow.innerHTML = `
                     <input type="text" id="newVehicleName" placeholder="Vehicle Name">
                     <input type="number" id="newVehicleTransfer" placeholder="Transfer Rate">
                     <input type="number" id="newVehicleNorth" placeholder="North Goa">
@@ -734,8 +761,10 @@
                     </button>
                 `;
             } else if (destination === "South India") {
-                addVehicleForm.innerHTML = `
+                formRow.classList.add('south-india-grid');
+                formRow.innerHTML = `
                     <input type="text" id="newVehicleName" placeholder="Vehicle Name">
+                    <input type="number" id="newVehicleMinKms" placeholder="Min Kms" value="300">
                     <input type="number" id="newVehicleExtra" placeholder="Extra Km Rate">
                     <input type="number" id="newVehicleBata" placeholder="Bata">
                     <input type="number" id="newVehicleTax" placeholder="Tax">
@@ -744,7 +773,8 @@
                     </button>
                 `;
             } else {
-                addVehicleForm.innerHTML = `
+                formRow.classList.add('kerala-grid');
+                formRow.innerHTML = `
                     <input type="text" id="newVehicleName" placeholder="Vehicle Name">
                     <input type="number" id="newVehicleDaily" placeholder="Daily Rate">
                     <input type="number" id="newVehicleExtra" placeholder="Extra Km Rate">
@@ -753,6 +783,8 @@
                     </button>
                 `;
             }
+            
+            addVehicleForm.appendChild(formRow);
             
             // Add event listener to add vehicle button
             document.getElementById('addVehicleBtn').addEventListener('click', addNewVehicle);
@@ -786,6 +818,7 @@
                     nightCharges: night
                 };
             } else if (currentSettingsDestination === "South India") {
+                const minKms = parseInt(document.getElementById('newVehicleMinKms').value) || 300;
                 const extra = parseInt(document.getElementById('newVehicleExtra').value) || 0;
                 const bata = parseInt(document.getElementById('newVehicleBata').value) || 0;
                 const tax = parseInt(document.getElementById('newVehicleTax').value) || 0;
@@ -794,7 +827,8 @@
                     dailyRate: 0,
                     extraKmRate: extra,
                     bata: bata,
-                    tax: tax
+                    tax: tax,
+                    minPerDayKms: minKms
                 };
             } else {
                 const daily = parseInt(document.getElementById('newVehicleDaily').value) || 0;
@@ -871,9 +905,15 @@
                 extraKms = Math.max(0, kms - dailyLimitTotal);
                 extraCost = extraKms * vehicleData.extraKmRate;
             } else if (destination === "South India") {
-                const dailyLimitTotal = destinationData.dailyLimit * days;
-                extraKms = Math.max(0, kms - dailyLimitTotal);
-                extraCost = extraKms * vehicleData.extraKmRate;
+                // South India calculation - minimum kms per day
+                const minKmsPerDay = vehicleData.minPerDayKms || 300;
+                const totalMinKms = minKmsPerDay * days;
+                
+                // All kms are charged at the extra km rate
+                extraKms = kms;
+                extraCost = kms * vehicleData.extraKmRate;
+                
+                // Bata and tax are added per day
                 bata = (vehicleData.bata || 0) * days;
                 tax = (vehicleData.tax || 0) * days;
                 baseCost = bata + tax;
@@ -921,10 +961,12 @@
                     if (southInput) destinationData.vehicles[vehicle].southGoaSightseeing = parseInt(southInput.value) || 0;
                     if (nightInput) destinationData.vehicles[vehicle].nightCharges = parseInt(nightInput.value) || 0;
                 } else if (currentSettingsDestination === "South India") {
+                    const minKmsInput = document.getElementById(`minKms-${vehicle.replace(/\s+/g, '-')}`);
                     const extraInput = document.getElementById(`extra-${vehicle.replace(/\s+/g, '-')}`);
                     const bataInput = document.getElementById(`bata-${vehicle.replace(/\s+/g, '-')}`);
                     const taxInput = document.getElementById(`tax-${vehicle.replace(/\s+/g, '-')}`);
                     
+                    if (minKmsInput) destinationData.vehicles[vehicle].minPerDayKms = parseInt(minKmsInput.value) || 300;
                     if (extraInput) destinationData.vehicles[vehicle].extraKmRate = parseInt(extraInput.value) || 0;
                     if (bataInput) destinationData.vehicles[vehicle].bata = parseInt(bataInput.value) || 0;
                     if (taxInput) destinationData.vehicles[vehicle].tax = parseInt(taxInput.value) || 0;
