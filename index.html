@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Vehicle Price Calculator</title>
+    <title>Modern Vehicle Price Calculator</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root {
@@ -259,12 +259,20 @@
             background: var(--light);
             border-radius: 8px;
             align-items: center;
+            cursor: move;
+            transition: all 0.2s;
+        }
+
+        .vehicle-row.dragging {
+            opacity: 0.5;
+            background: #e9ecef;
         }
 
         .vehicle-row-header {
             font-weight: bold;
             background: var(--secondary);
             color: white;
+            cursor: default;
         }
 
         .remove-vehicle {
@@ -284,6 +292,21 @@
         .remove-vehicle:hover {
             background: #e0557e;
             transform: scale(1.1);
+        }
+
+        .drag-handle {
+            color: #6c757d;
+            cursor: grab;
+            padding: 5px;
+            transition: all 0.2s;
+        }
+
+        .drag-handle:hover {
+            color: var(--primary);
+        }
+
+        .drag-handle:active {
+            cursor: grabbing;
         }
 
         .add-vehicle-section {
@@ -341,19 +364,19 @@
 
         /* Grid templates for different destinations */
         .kerala-grid {
-            grid-template-columns: 2fr 1fr 1fr auto;
+            grid-template-columns: auto 2fr 1fr 1fr auto;
         }
         
         .south-india-grid {
-            grid-template-columns: 2fr 1fr 1fr 1fr 1fr auto;
+            grid-template-columns: auto 2fr 1fr 1fr 1fr 1fr auto;
         }
         
         .goa-grid {
-            grid-template-columns: 2fr 1fr 1fr 1fr 1fr auto;
+            grid-template-columns: auto 2fr 1fr 1fr 1fr 1fr auto;
         }
         
         .gujarat-grid {
-            grid-template-columns: 2fr 1fr 1fr auto;
+            grid-template-columns: auto 2fr 1fr 1fr auto;
         }
 
         @media (max-width: 768px) {
@@ -504,7 +527,7 @@
 
     <script>
         // Default vehicle rates for different destinations
-        let destinationRates = {
+        const defaultDestinationRates = {
             "Kerala": {
                 dailyLimit: 100,
                 vehicles: {
@@ -608,6 +631,9 @@
             }
         };
 
+        // Load data from localStorage or use defaults
+        let destinationRates = JSON.parse(localStorage.getItem('vehicleCalculatorData')) || defaultDestinationRates;
+
         // DOM elements
         const calculateBtn = document.getElementById('calculateBtn');
         const settingsBtn = document.getElementById('settingsBtn');
@@ -622,6 +648,12 @@
         const destinationDetails = document.getElementById('destinationDetails');
         const vehicleSelect = document.getElementById('vehicle');
         let currentSettingsDestination = "Kerala";
+        let draggedItem = null;
+
+        // Save data to localStorage
+        function saveToLocalStorage() {
+            localStorage.setItem('vehicleCalculatorData', JSON.stringify(destinationRates));
+        }
 
         // Initialize the vehicle dropdown
         function initializeVehicleDropdown() {
@@ -662,6 +694,7 @@
             if (destination === "Goa") {
                 headerRow.classList.add('goa-grid');
                 headerRow.innerHTML = `
+                    <div></div>
                     <div>Vehicle Type</div>
                     <div>Transfer (₹)</div>
                     <div>North Goa (₹)</div>
@@ -672,6 +705,7 @@
             } else if (destination === "South India") {
                 headerRow.classList.add('south-india-grid');
                 headerRow.innerHTML = `
+                    <div></div>
                     <div>Vehicle Type</div>
                     <div>Min Per Day Kms</div>
                     <div>Extra Km Rate (₹)</div>
@@ -682,6 +716,7 @@
             } else {
                 headerRow.classList.add('kerala-grid');
                 headerRow.innerHTML = `
+                    <div></div>
                     <div>Vehicle Type</div>
                     <div>Daily Rate (₹)</div>
                     <div>Extra Km Rate (₹)</div>
@@ -696,10 +731,15 @@
                 const row = document.createElement('div');
                 row.className = 'vehicle-row';
                 row.id = `vehicle-${vehicle.replace(/\s+/g, '-')}`;
+                row.draggable = true;
+                row.setAttribute('data-vehicle', vehicle);
                 
                 if (destination === "Goa") {
                     row.classList.add('goa-grid');
                     row.innerHTML = `
+                        <div class="drag-handle">
+                            <i class="fas fa-grip-vertical"></i>
+                        </div>
                         <div>${vehicle}</div>
                         <input type="number" value="${destinationData.vehicles[vehicle].transfer}" placeholder="Transfer" id="transfer-${vehicle.replace(/\s+/g, '-')}">
                         <input type="number" value="${destinationData.vehicles[vehicle].northGoaSightseeing}" placeholder="North Goa" id="north-${vehicle.replace(/\s+/g, '-')}">
@@ -712,6 +752,9 @@
                 } else if (destination === "South India") {
                     row.classList.add('south-india-grid');
                     row.innerHTML = `
+                        <div class="drag-handle">
+                            <i class="fas fa-grip-vertical"></i>
+                        </div>
                         <div>${vehicle}</div>
                         <input type="number" value="${destinationData.vehicles[vehicle].minPerDayKms}" placeholder="Min Kms" id="minKms-${vehicle.replace(/\s+/g, '-')}">
                         <input type="number" value="${destinationData.vehicles[vehicle].extraKmRate}" placeholder="Extra Km Rate" id="extra-${vehicle.replace(/\s+/g, '-')}">
@@ -724,6 +767,9 @@
                 } else {
                     row.classList.add('kerala-grid');
                     row.innerHTML = `
+                        <div class="drag-handle">
+                            <i class="fas fa-grip-vertical"></i>
+                        </div>
                         <div>${vehicle}</div>
                         <input type="number" value="${destinationData.vehicles[vehicle].dailyRate}" placeholder="Daily Rate" id="daily-${vehicle.replace(/\s+/g, '-')}">
                         <input type="number" value="${destinationData.vehicles[vehicle].extraKmRate}" placeholder="Extra Km Rate" id="extra-${vehicle.replace(/\s+/g, '-')}">
@@ -744,6 +790,9 @@
                 });
             });
             
+            // Initialize drag and drop
+            initializeDragAndDrop();
+            
             // Create add vehicle form based on destination
             const formRow = document.createElement('div');
             formRow.className = 'add-vehicle-form';
@@ -751,6 +800,7 @@
             if (destination === "Goa") {
                 formRow.classList.add('goa-grid');
                 formRow.innerHTML = `
+                    <div></div>
                     <input type="text" id="newVehicleName" placeholder="Vehicle Name">
                     <input type="number" id="newVehicleTransfer" placeholder="Transfer Rate">
                     <input type="number" id="newVehicleNorth" placeholder="North Goa">
@@ -763,6 +813,7 @@
             } else if (destination === "South India") {
                 formRow.classList.add('south-india-grid');
                 formRow.innerHTML = `
+                    <div></div>
                     <input type="text" id="newVehicleName" placeholder="Vehicle Name">
                     <input type="number" id="newVehicleMinKms" placeholder="Min Kms" value="300">
                     <input type="number" id="newVehicleExtra" placeholder="Extra Km Rate">
@@ -775,6 +826,7 @@
             } else {
                 formRow.classList.add('kerala-grid');
                 formRow.innerHTML = `
+                    <div></div>
                     <input type="text" id="newVehicleName" placeholder="Vehicle Name">
                     <input type="number" id="newVehicleDaily" placeholder="Daily Rate">
                     <input type="number" id="newVehicleExtra" placeholder="Extra Km Rate">
@@ -788,6 +840,75 @@
             
             // Add event listener to add vehicle button
             document.getElementById('addVehicleBtn').addEventListener('click', addNewVehicle);
+        }
+
+        // Initialize drag and drop functionality
+        function initializeDragAndDrop() {
+            const vehicleRows = document.querySelectorAll('.vehicle-row:not(.vehicle-row-header)');
+            
+            vehicleRows.forEach(row => {
+                row.addEventListener('dragstart', function(e) {
+                    draggedItem = this;
+                    setTimeout(() => {
+                        this.classList.add('dragging');
+                    }, 0);
+                });
+                
+                row.addEventListener('dragend', function() {
+                    this.classList.remove('dragging');
+                    draggedItem = null;
+                });
+                
+                row.addEventListener('dragover', function(e) {
+                    e.preventDefault();
+                });
+                
+                row.addEventListener('dragenter', function(e) {
+                    e.preventDefault();
+                    if (this !== draggedItem) {
+                        this.style.borderTop = '2px solid var(--primary)';
+                    }
+                });
+                
+                row.addEventListener('dragleave', function() {
+                    this.style.borderTop = '';
+                });
+                
+                row.addEventListener('drop', function(e) {
+                    e.preventDefault();
+                    this.style.borderTop = '';
+                    
+                    if (this !== draggedItem) {
+                        const vehicleRowsArray = Array.from(vehicleRows);
+                        const draggedIndex = vehicleRowsArray.indexOf(draggedItem);
+                        const targetIndex = vehicleRowsArray.indexOf(this);
+                        
+                        if (draggedIndex < targetIndex) {
+                            this.parentNode.insertBefore(draggedItem, this.nextSibling);
+                        } else {
+                            this.parentNode.insertBefore(draggedItem, this);
+                        }
+                        
+                        // Update the vehicle order in the data
+                        updateVehicleOrder();
+                    }
+                });
+            });
+        }
+
+        // Update vehicle order after drag and drop
+        function updateVehicleOrder() {
+            const vehicleRows = document.querySelectorAll('.vehicle-row:not(.vehicle-row-header)');
+            const newOrder = {};
+            
+            vehicleRows.forEach(row => {
+                const vehicleName = row.getAttribute('data-vehicle');
+                newOrder[vehicleName] = destinationRates[currentSettingsDestination].vehicles[vehicleName];
+            });
+            
+            destinationRates[currentSettingsDestination].vehicles = newOrder;
+            saveToLocalStorage();
+            initializeVehicleDropdown();
         }
 
         // Add a new vehicle
@@ -840,6 +961,9 @@
                 };
             }
             
+            // Save to localStorage
+            saveToLocalStorage();
+            
             // Reinitialize the settings to show the new vehicle
             initializeVehicleSettings(currentSettingsDestination);
             
@@ -862,6 +986,7 @@
         function removeVehicle(vehicleName) {
             if (confirm(`Are you sure you want to remove ${vehicleName}?`)) {
                 delete destinationRates[currentSettingsDestination].vehicles[vehicleName];
+                saveToLocalStorage();
                 initializeVehicleSettings(currentSettingsDestination);
                 initializeVehicleDropdown();
             }
@@ -978,6 +1103,9 @@
                     if (extraInput) destinationData.vehicles[vehicle].extraKmRate = parseInt(extraInput.value) || 0;
                 }
             }
+            
+            // Save to localStorage
+            saveToLocalStorage();
             
             // Update the vehicle dropdown
             initializeVehicleDropdown();
